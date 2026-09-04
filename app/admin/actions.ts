@@ -126,3 +126,34 @@ export async function upsertProductAction(
   revalidatePath("/");
   return { ok: true };
 }
+
+/** Apaga o produto (e tenta limpar as fotos dele no Storage). */
+export async function deleteProductAction(
+  productId: string,
+): Promise<ActionResult> {
+  if (!(await isAdmin())) return { ok: false, error: "Sem acesso." };
+
+  const supabase = await createClient();
+
+  // best-effort: apaga os arquivos da pasta do produto no bucket
+  const { data: files } = await supabase.storage
+    .from("product-photos")
+    .list(productId);
+  if (files?.length) {
+    await supabase.storage
+      .from("product-photos")
+      .remove(files.map((f) => `${productId}/${f.name}`));
+  }
+
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", productId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/produtos");
+  revalidatePath("/admin");
+  revalidatePath("/vinhos");
+  revalidatePath("/");
+  return { ok: true };
+}

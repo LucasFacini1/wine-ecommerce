@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Wine } from "@/types";
-import { BottlePlate } from "@/components/BottlePlate";
+import { ProductImage } from "@/components/ProductImage";
 import { Price } from "@/components/ui/Price";
 import { WINE_TYPE_LABEL } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -23,7 +23,7 @@ export function ProductCard({
     >
       <div className="relative aspect-[4/5] overflow-hidden border border-line bg-ink-soft">
         <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.04]">
-          <BottlePlate wine={wine} priority={priority} />
+          <ProductImage wine={wine} priority={priority} />
         </div>
 
         <span className="label absolute left-3 top-3 border border-line bg-ink-soft/90 px-2 py-1 backdrop-blur-sm">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { BottlePlate } from "@/components/BottlePlate";
+import { ProductImage } from "@/components/ProductImage";
 import { Button } from "@/components/ui/Button";
 import { Stepper } from "@/components/ui/Stepper";
 import { Price } from "@/components/ui/Price";
@@ -57,9 +57,9 @@ export default function CartPage() {
             <li key={wine.id} className="flex gap-5 py-6">
               <Link
                 href={`/vinhos/${wine.slug}`}
-                className="aspect-[4/5] w-24 shrink-0 border border-line"
+                className="relative aspect-[4/5] w-24 shrink-0 overflow-hidden border border-line"
               >
-                <BottlePlate wine={wine} />
+                <ProductImage wine={wine} sizes="96px" />
               </Link>
 
               <div className="flex flex-1 flex-col">

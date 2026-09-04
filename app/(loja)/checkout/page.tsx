@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { BottlePlate } from "@/components/BottlePlate";
+import { ProductImage } from "@/components/ProductImage";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Price } from "@/components/ui/Price";
@@ -230,8 +230,8 @@ export default function CheckoutPage() {
             <ul className="flex flex-col gap-4 border-b border-line-soft pb-4">
               {cartLines.map(({ wine, qty, lineCents }) => (
                 <li key={wine.id} className="flex gap-3">
-                  <div className="aspect-[4/5] w-12 shrink-0 border border-line">
-                    <BottlePlate wine={wine} />
+                  <div className="relative aspect-[4/5] w-12 shrink-0 overflow-hidden border border-line">
+                    <ProductImage wine={wine} sizes="48px" />
                   </div>
                   <div className="flex flex-1 flex-col">
                     <span className="font-display text-sm text-bone">

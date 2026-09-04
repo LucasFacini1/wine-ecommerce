@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getActiveWines } from "@/lib/data/wines";
 import { BottlePlate } from "@/components/BottlePlate";
+import { ProductImage } from "@/components/ProductImage";
 import { ProductCard } from "@/components/loja/ProductCard";
 import { SectionHeading } from "@/components/loja/SectionHeading";
 import { Button } from "@/components/ui/Button";
@@ -98,7 +99,7 @@ export default async function HomePage() {
             href={`/vinhos/${hero.slug}`}
             className="relative mx-auto block aspect-[4/5] max-w-sm border border-line bg-ink-soft"
           >
-            <BottlePlate wine={hero} priority />
+            <ProductImage wine={hero} priority sizes="(min-width: 768px) 40vw, 90vw" />
           </Link>
           <div className="relative mx-auto mt-4 flex max-w-sm items-baseline justify-between">
             <p className="font-text italic text-bone-dim">
@@ -201,7 +202,7 @@ export default async function HomePage() {
             href={`/vinhos/${spotlight.slug}`}
             className="relative mx-auto block aspect-[4/5] w-full max-w-xs border border-oxblood/20"
           >
-            <BottlePlate wine={spotlight} />
+            <ProductImage wine={spotlight} sizes="(min-width: 768px) 35vw, 90vw" />
           </Link>
           <div>
             <p className="label label-brass">

@@ -3,10 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft, ImagePlus, Loader2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import type { Wine, WineType } from "@/types";
 import { createClient } from "@/lib/supabase/client";
-import { upsertProductAction } from "@/app/admin/actions";
+import { deleteProductAction, upsertProductAction } from "@/app/admin/actions";
 import { BottlePlate } from "@/components/BottlePlate";
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea } from "@/components/ui/Field";
@@ -21,6 +21,7 @@ export function ProductForm({ initial }: { initial?: Wine }) {
   const router = useRouter();
   const isEdit = !!initial;
   const [pending, startTransition] = useTransition();
+  const [deleting, startDelete] = useTransition();
 
   const [name, setName] = useState(initial?.name ?? "");
   const [producer, setProducer] = useState(initial?.producer ?? "");
@@ -143,7 +144,28 @@ export function ProductForm({ initial }: { initial?: Wine }) {
     });
   }
 
-  const busy = pending || uploading;
+  function onDelete() {
+    if (!initial) return;
+    if (
+      !window.confirm(
+        `Excluir "${initial.name}"? Essa ação não pode ser desfeita.`,
+      )
+    ) {
+      return;
+    }
+    setError("");
+    startDelete(async () => {
+      const res = await deleteProductAction(initial.id);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      router.push("/admin/produtos");
+      router.refresh();
+    });
+  }
+
+  const busy = pending || uploading || deleting;
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-8">
@@ -358,6 +380,17 @@ export function ProductForm({ initial }: { initial?: Wine }) {
         >
           Cancelar
         </Link>
+        {isEdit && (
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={busy}
+            className="ml-auto flex items-center gap-2 font-sans text-[0.72rem] uppercase tracking-[0.16em] text-danger hover:text-danger disabled:opacity-40"
+          >
+            <Trash2 size={14} strokeWidth={1.5} />
+            {deleting ? "Excluindo…" : "Excluir produto"}
+          </button>
+        )}
       </div>
     </form>
   );
