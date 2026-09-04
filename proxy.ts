@@ -24,11 +24,16 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const virtualPath = onAdminHost
-    ? `/admin${pathname === "/" ? "" : pathname}`
-    : pathname;
+  // idempotente: se o link interno já aponta pra /admin/... (menu, tabelas
+  // etc.), não gruda outro /admin na frente — só prefixa caminhos "limpos".
+  const alreadyPrefixed = pathname.startsWith("/admin");
+  const virtualPath =
+    onAdminHost && !alreadyPrefixed
+      ? `/admin${pathname === "/" ? "" : pathname}`
+      : pathname;
 
-  const rewriteUrl = onAdminHost ? request.nextUrl.clone() : null;
+  const rewriteUrl =
+    onAdminHost && !alreadyPrefixed ? request.nextUrl.clone() : null;
   if (rewriteUrl) rewriteUrl.pathname = virtualPath;
 
   const makeResponse = () =>
