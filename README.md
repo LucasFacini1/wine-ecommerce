@@ -1,8 +1,7 @@
 # Empório Padox — e-commerce de vinhos
 
 Loja de vinhos de produtor + painel administrativo. Loja e painel leem/gravam no
-**Supabase**; o painel exige login. Falta a integração de pagamento (Mercado
-Pago) — ver o fim deste arquivo.
+**Supabase**; o painel exige login; pagamento via **Mercado Pago** (Checkout Pro).
 
 **Setup**: copie `.env.example` para `.env.local` e preencha as chaves do
 Supabase; aplique `supabase/` conforme [docs/DATABASE.md](docs/DATABASE.md).
@@ -45,8 +44,10 @@ npm run build    # build de produção
 | `app/admin/login/` | Login (Supabase Auth) |
 | `app/admin/(panel)/` | Painel: dashboard, pedidos, produtos — protegido por `requireAdmin` |
 | `app/admin/actions.ts` | Server Actions do painel (avançar status, salvar produto) |
-| `app/api/checkout/route.ts` | Cria o pedido no banco (service role) |
-| `proxy.ts` | Middleware do Next 16 — barra `/admin/*` de quem não está logado |
+| `app/api/checkout/route.ts` | Cria o pedido + a *preference* do Mercado Pago |
+| `app/api/webhooks/mercadopago/route.ts` | Confirma o pagamento, chama `mark_order_paid` |
+| `lib/mercadopago.ts` | Cliente do SDK oficial (`Preference`, `Payment`) |
+| `proxy.ts` | Middleware do Next 16 — barra `/admin/*` de quem não está logado; reescreve o subdomínio `admin.*` pra dentro de `/admin` |
 | `lib/store.tsx` | `StoreProvider` — só o carrinho (localStorage + snapshot do vinho) |
 | `lib/data/` | Consultas ao Supabase + mapeadores `snake_case` → `types/index.ts` |
 | `lib/supabase/` | Clientes Supabase: `client` (browser), `server` (sessão), `admin` (service role) |
@@ -57,14 +58,25 @@ npm run build    # build de produção
 ### Como o pedido flui
 
 Checkout → `POST /api/checkout` (valida, lê preço/estoque do banco, insere
-`orders` + `order_items` com a service role) → `/pedido/[id]` (lido pela service
-role; o anônimo não enxerga `orders` por RLS). O painel avança o status via a
-função `advance_order_status`. O webhook do Mercado Pago (ainda não implementado)
-vai chamar `mark_order_paid`, que baixa o estoque.
+`orders` + `order_items` com a service role, cria a *preference* no Mercado
+Pago) → cliente é levado pro `init_point` (página da MP) → paga → MP chama
+`POST /api/webhooks/mercadopago`, que relê o pagamento na API da MP (nunca
+confia no corpo do webhook) e, se aprovado, chama `mark_order_paid` — marca o
+pedido como `pago` e baixa o estoque. `/pedido/[id]` é lido pela service role
+(o anônimo não enxerga `orders` por RLS). No painel, o status avança pela
+função `advance_order_status`.
 
-## Falta (Fase 2)
+### Domínio dedicado do admin
 
-1. **Mercado Pago**: criar a *preference* em `/api/checkout` e redirecionar para
-   o `init_point`; `POST /api/webhooks/mercadopago` → `mark_order_paid`.
-   Credenciais em `.env.local` (`MERCADOPAGO_*`).
-2. E-mail transacional a cada etapa (Resend).
+Além de `/admin` no domínio principal, um subdomínio `admin.<seu-domínio>`
+aponta pro **mesmo projeto** na Vercel e cai direto no painel — o `proxy.ts`
+detecta o host e reescreve por baixo dos panos (`admin.site.com/pedidos` vira
+`/admin/pedidos`, sem aparecer na URL). Configuração:
+
+1. Vercel → Domains → adiciona `admin.<seu-domínio>` no **mesmo projeto**.
+2. No registrador, um `CNAME` de `admin` pra `cname.vercel-dns.com`.
+3. Nada de código muda — é só o registro de DNS.
+
+## Falta
+
+1. E-mail transacional a cada etapa (Resend).

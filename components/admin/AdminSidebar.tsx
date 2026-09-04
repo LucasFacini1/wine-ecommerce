@@ -20,13 +20,20 @@ const LINKS = [
   { href: "/admin/produtos", label: "Produtos", icon: Package },
 ];
 
-export function AdminSidebar({ email }: { email: string }) {
+export function AdminSidebar({
+  email,
+  storeHref,
+}: {
+  email: string;
+  storeHref: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
   async function signOut() {
     await createClient().auth.signOut();
-    router.replace("/admin/login");
+    const onAdminHost = window.location.hostname.startsWith("admin.");
+    router.replace(onAdminHost ? "/login" : "/admin/login");
     router.refresh();
   }
 
@@ -76,7 +83,7 @@ export function AdminSidebar({ email }: { email: string }) {
           Sair
         </button>
         <Link
-          href="/"
+          href={storeHref}
           className="flex items-center gap-2 border-t border-line-soft px-5 py-4 font-sans text-xs uppercase tracking-[0.14em] text-bone-faint hover:text-bone"
         >
           Ver a loja

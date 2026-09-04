@@ -1,6 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isOnAdminHost } from "@/lib/store-link";
 
 /** Usuário logado (ou null). */
 export async function getUser() {
@@ -22,10 +23,15 @@ export async function isAdmin(): Promise<boolean> {
 /**
  * Garante que quem acessa é admin; senão redireciona para o login.
  * Use no topo de layouts/páginas do painel.
+ *
+ * No subdomínio admin.* a rota de login "pública" é /login (o proxy é quem
+ * reescreve pra /admin/login por baixo dos panos) — por isso o destino do
+ * redirect depende do host.
  */
 export async function requireAdmin() {
+  const loginPath = (await isOnAdminHost()) ? "/login" : "/admin/login";
   const user = await getUser();
-  if (!user) redirect("/admin/login");
-  if (!(await isAdmin())) redirect("/admin/login?erro=sem-acesso");
+  if (!user) redirect(loginPath);
+  if (!(await isAdmin())) redirect(`${loginPath}?erro=sem-acesso`);
   return user;
 }

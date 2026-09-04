@@ -2,12 +2,41 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 /**
- * Renova a sessão do Supabase a cada request e barra o acesso a /admin
- * de quem não está logado. A checagem de admin (admin_users) fica no
- * layout do painel (lib/auth.ts → requireAdmin).
+ * Renova a sessão do Supabase e barra o acesso ao painel de quem não está
+ * logado. Dois jeitos de chegar no painel:
+ *   - caminho normal: qualquer host, /admin/*
+ *   - subdomínio dedicado: admin.<domínio>/* é reescrito por baixo dos panos
+ *     para /admin/* (a URL na barra do navegador continua limpa)
+ * A checagem de admin (admin_users) fica no layout do painel
+ * (lib/auth.ts → requireAdmin).
  */
+function isAdminHost(host: string): boolean {
+  return host === "admin.localhost:3000" || host.startsWith("admin.");
+}
+
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const host = request.headers.get("host") ?? "";
+  const onAdminHost = isAdminHost(host);
+  const { pathname } = request.nextUrl;
+
+  // fora do subdomínio admin e fora de /admin: não mexe em nada (loja fica rápida)
+  if (!onAdminHost && !pathname.startsWith("/admin")) {
+    return NextResponse.next();
+  }
+
+  const virtualPath = onAdminHost
+    ? `/admin${pathname === "/" ? "" : pathname}`
+    : pathname;
+
+  const rewriteUrl = onAdminHost ? request.nextUrl.clone() : null;
+  if (rewriteUrl) rewriteUrl.pathname = virtualPath;
+
+  const makeResponse = () =>
+    rewriteUrl
+      ? NextResponse.rewrite(rewriteUrl, { request })
+      : NextResponse.next({ request });
+
+  let response = makeResponse();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +50,7 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          response = NextResponse.next({ request });
+          response = makeResponse();
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );
@@ -34,13 +63,11 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-  const isAdminArea =
-    pathname.startsWith("/admin") && pathname !== "/admin/login";
+  const isLoginPage = virtualPath === "/admin/login";
 
-  if (isAdminArea && !user) {
+  if (virtualPath.startsWith("/admin") && !isLoginPage && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
+    url.pathname = onAdminHost ? "/login" : "/admin/login";
     url.searchParams.set("proximo", pathname);
     return NextResponse.redirect(url);
   }
@@ -48,7 +75,8 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
-// Só o painel precisa de sessão — a loja é pública.
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+  ],
 };
