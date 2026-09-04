@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ *
+ *  VINÁRIA — sistema visual
+ *  Clean & claro: fundo branco levemente quente, texto quase preto,
+ *  detalhes em vinho. Fios de 1px no lugar de sombras. Tipografia com
+ *  voz (Fraunces display / Newsreader texto / Mona Sans para UI).
+ *
+ *  Os nomes de token são mantidos por compatibilidade: `ink` = famílias
+ *  de SUPERFÍCIE (agora claras), `bone` = famílias de TEXTO (agora
+ *  escuras), `oxblood`/`brass` = acento vinho.
+ * ------------------------------------------------------------------ */
+
+@theme {
+  /* superfícies (claras) */
+  --color-ink: #fbfaf8; /* fundo da página */
+  --color-ink-soft: #ffffff; /* cartões, superfícies elevadas */
+  --color-ink-raise: #f2eee7; /* hover, faixas sutis */
+  --color-canvas: #fbfaf8;
+
+  /* fios */
+  --color-line: #e7e2d9;
+  --color-line-soft: #f0ece4;
+
+  /* texto (escuro) */
+  --color-bone: #211c17; /* texto principal */
+  --color-bone-dim: #6a635a; /* texto secundário */
+  --color-bone-faint: #948c80; /* terciário, placeholder */
+
+  /* acento vinho */
+  --color-oxblood: #6e1f2b;
+  --color-oxblood-bright: #58131e; /* estado hover/ativo (mais escuro no tema claro) */
+  --color-oxblood-deep: #4a121b;
+  --color-wine-tint: #f6ebec; /* lavagem clara para blocos de destaque */
+
+  /* alias: todo acento "brass" agora é vinho */
+  --color-brass: #6e1f2b;
+  --color-brass-bright: #591420;
+  --color-brass-dim: #a6808a;
+
+  /* texto claro sobre superfícies escuras/vinho */
+  --color-on-dark: #f8f1ea;
+
+  /* superfícies claras auxiliares (legado) */
+  --color-paper: #f4eee2;
+  --color-paper-soft: #eae1cf;
+  --color-paper-line: #ded4c0;
+  --color-paper-ink: #26201a;
+
+  /* semânticos (tema claro) */
+  --color-ok: #3f7247;
+  --color-ok-bg: #edf3ec;
+  --color-warn: #8a6216;
+  --color-warn-bg: #f7efdd;
+  --color-danger: #9b3b33;
+  --color-danger-bg: #f8e9e7;
+
+  /* tipografia */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-text: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-mona), ui-sans-serif, system-ui, sans-serif;
+
+  /* medidas de página */
+  --spacing-gutter: 1.5rem;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Regras base — dentro de @layer para que os utilitários do Tailwind
+ *  (border-*, text-*, etc.) continuem vencendo por ordem de camada.
+ * ------------------------------------------------------------------ */
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scrollbar-color: var(--color-line) transparent;
+  }
+
+  body {
+    background: var(--color-ink);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv05";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-oxblood);
+    color: var(--color-on-dark);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-oxblood);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    font-optical-sizing: auto;
+  }
+}
+
+/* ---- classes utilitárias próprias (em @layer para não sobrepor utilitários) ---- */
+
+@layer components {
+  /* rótulo em versalete com tracking — labels de seção */
+  .label {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-bone-faint);
+  }
+
+  .label-brass {
+    color: var(--color-oxblood);
+  }
+
+  /* numeral de safra usado como elemento gráfico */
+  .vintage {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-variant-numeric: lining-nums;
+    letter-spacing: 0.01em;
+  }
+
+  /* container editorial */
+  .wrap {
+    width: 100%;
+    max-width: 84rem;
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+
+  .wrap-narrow {
+    width: 100%;
+    max-width: 46rem;
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+
+  /* grão quase imperceptível */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.02;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* fio horizontal fino */
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--color-line);
+  }
+
+  /* link com sublinhado que cresce */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.3s ease;
+  }
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+
+  /* link "pular para o conteúdo" */
+  .skip-link {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    transform: translateY(-120%);
+    transition: transform 0.2s ease;
+    background: var(--color-oxblood);
+    color: var(--color-on-dark);
+    padding: 0.75rem 1.25rem;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .skip-link:focus-visible {
+    transform: translateY(0);
+    outline-offset: -2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
