@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as Dialog from "@radix-ui/react-dialog";
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { Wordmark } from "@/components/Wordmark";
@@ -28,13 +29,6 @@ export function Masthead() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
 
   return (
     <header
@@ -116,33 +110,37 @@ export function Masthead() {
         </div>
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-50 bg-ink md:hidden">
-          <div className="wrap flex h-16 items-center justify-between">
-            <Wordmark size="md" />
-            <button
-              type="button"
-              aria-label="Fechar menu"
-              onClick={() => setOpen(false)}
-              className="text-bone-dim"
-            >
-              <X size={20} strokeWidth={1.5} />
-            </button>
-          </div>
-          <nav className="wrap mt-6 flex flex-col gap-1">
-            {NAV.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="border-b border-line-soft py-4 font-display text-xl text-bone"
+      <Dialog.Root open={open} onOpenChange={setOpen}>
+        <Dialog.Portal>
+          <Dialog.Content
+            aria-describedby={undefined}
+            className="fixed inset-0 z-50 overflow-y-auto bg-ink md:hidden"
+          >
+            <Dialog.Title className="sr-only">Menu</Dialog.Title>
+            <div className="wrap flex h-16 items-center justify-between">
+              <Wordmark size="md" />
+              <Dialog.Close
+                aria-label="Fechar menu"
+                className="text-bone-dim"
               >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
+                <X size={20} strokeWidth={1.5} />
+              </Dialog.Close>
+            </div>
+            <nav className="wrap mt-6 flex flex-col gap-1">
+              {NAV.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="border-b border-line-soft py-4 font-display text-xl text-bone"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </header>
   );
 }
